@@ -1,0 +1,36 @@
+const mongoose = require('mongoose');
+
+const OrphanSchema = new mongoose.Schema({
+  id:            { type: String, required: true, unique: true },
+  name:          String,
+  nameEn:        String,
+  age:           Number,
+  father:        String,
+  fatherEn:      String,
+  grandfather:   String,
+  mother:        String,
+  status:        { type: String, default: 'Healthy' },
+  isActive:      { type: Boolean, default: true },
+  family:        Number,
+  guardian:      String,
+  guardianFather:String,
+  grade:         String,
+  mobile:        String,
+  goesSchool:    { type: Boolean, default: true },
+  schoolType:    String,
+  schoolCustom:  String,
+  school:        String,
+  studenttype:   { type: String, default: 'orphan' },
+  edutype:       String,
+  coursegrade:   String,
+  studytime:     String,
+  address:       String,
+  notes:         String,
+  gender:        String,
+  photo:         mongoose.Schema.Types.Mixed,
+  attachments:   { type: Array, default: [] },
+  createdAt:     { type: Date, default: Date.now },
+  updatedAt:     { type: Date, default: Date.now },
+}, { strict: false });
+
+module.exports = mongoose.model('Orphan', OrphanSchema);
