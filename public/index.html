@@ -550,6 +550,12 @@ body.rtl .toast{right:auto;left:2rem;}
       <option value="F">F</option>
       <option value="G">G</option>
     </select>
+    <select class="filter-select" id="filterWorthiness" onchange="filterOrphans()" style="font-family:var(--font-fa);">
+      <option value="">همه سطوح استحقاق</option>
+      <option value="very_worthy">🔴 بسیار مستحق</option>
+      <option value="worthy">🟡 مستحق</option>
+      <option value="average">🟢 متوسط</option>
+    </select>
     <select class="filter-select" id="filterActive" onchange="filterOrphans()" style="font-family:var(--font-fa);">
       <option value="">✅ فعال + غیرفعال</option>
       <option value="active">✅ فقط فعال</option>
@@ -604,9 +610,27 @@ body.rtl .toast{right:auto;left:2rem;}
       <div class="page-subtitle">ایتام با ولدیت مشترک — گروه‌بندی خودکار</div>
     </div>
     <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
-      <input class="fi" type="search" id="fam-search" placeholder="🔍 جستجو بر اساس اسم، ولد، جد، مادر یا سرپرست..." style="width:340px;font-size:.85rem;" oninput="renderFamilies()">
-      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('fam-search').value='';renderFamilies()">× پاک</button>
+      <button class="btn btn-secondary btn-sm" onclick="printFamilies()" style="font-family:var(--font-fa);">🖨️ چاپ</button>
     </div>
+  </div>
+  <!-- Filter bar -->
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.75rem;padding:.75rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);" dir="rtl">
+    <input class="fi" type="search" id="fam-search" placeholder="🔍 جستجو بر اساس اسم، ولد، جد، مادر یا سرپرست..." style="width:280px;font-size:.85rem;" oninput="renderFamilies()">
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('fam-search').value='';renderFamilies()" style="font-family:var(--font-fa);">× پاک</button>
+    <span style="font-size:.8rem;color:var(--text2);font-family:var(--font-fa);">| اندازه خانواده:</span>
+    <select id="fam-size-filter" onchange="renderFamilies()" style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:.38rem .7rem;color:var(--text);font-family:var(--font-fa);font-size:.82rem;outline:none;">
+      <option value="">همه اندازه‌ها</option>
+      <option value="small">🔵 کوچک (≤3 نفر)</option>
+      <option value="medium">🟡 متوسط (≤5 نفر)</option>
+      <option value="large">🔴 بزرگ (>۵ نفر)</option>
+    </select>
+    <span style="font-size:.8rem;color:var(--text2);font-family:var(--font-fa);">| سطح استحقاق:</span>
+    <select id="fam-worthy-filter" onchange="renderFamilies()" style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:.38rem .7rem;color:var(--text);font-family:var(--font-fa);font-size:.82rem;outline:none;">
+      <option value="">همه سطوح</option>
+      <option value="very_worthy">🔴 بسیار مستحق</option>
+      <option value="worthy">🟡 مستحق</option>
+      <option value="average">🟢 متوسط</option>
+    </select>
   </div>
   <div id="fam-stats" style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem;"></div>
   <div id="families-list" style="display:flex;flex-direction:column;gap:.75rem;"></div>
@@ -825,6 +849,12 @@ body.rtl .toast{right:auto;left:2rem;}
       <option value="Healthy">صحتمند</option>
       <option value="Disabled">معلول</option>
       <option value="Chronic">بیماری مزمن</option>
+    </select>
+    <select id="rpt-filter-worthy" onchange="renderReports()" style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.42rem .75rem;color:var(--text);font-family:var(--font-fa);font-size:.84rem;outline:none;cursor:pointer;">
+      <option value="">همه سطوح استحقاق</option>
+      <option value="very_worthy">🔴 بسیار مستحق</option>
+      <option value="worthy">🟡 مستحق</option>
+      <option value="average">🟢 متوسط</option>
     </select>
     <div id="rpt-filter-summary" style="font-family:var(--font-fa);font-size:.78rem;color:var(--text2);margin-right:auto;"></div>
   </div>
@@ -1479,7 +1509,16 @@ body.rtl .toast{right:auto;left:2rem;}
           <input class="fi" type="text" inputmode="numeric" id="f-family" placeholder="تعداد" oninput="this.value=toEnglishDigits(this.value)">
         </div>
 
-        <div class="fg" style="grid-column:span 3;">
+        <div class="fg">
+          <label class="fl" style="color:var(--red);">🌟 سطح استحقاق</label>
+          <select class="fi" id="f-worthiness" style="border-color:rgba(224,90,107,0.4);">
+            <option value="">— انتخاب کنید —</option>
+            <option value="very_worthy">🔴 بسیار مستحق</option>
+            <option value="worthy">🟡 مستحق</option>
+            <option value="average">🟢 متوسط</option>
+          </select>
+        </div>
+        <div class="fg" style="grid-column:span 2;">
           <label class="fl">معرفی / یادداشت</label>
           <textarea class="fi" id="f-notes" placeholder="توضیحات و اطلاعات تکمیلی..." style="height:48px;resize:none;" lang="fa"></textarea>
         </div>
@@ -2537,6 +2576,7 @@ function filterOrphans() {
   const courseGradeF = document.getElementById('filterCourseGrade').value;
   const studentTypeF = document.getElementById('filterStudentType')?.value || '';
   const activeF = document.getElementById('filterActive')?.value || '';
+  const worthinessF = document.getElementById('filterWorthiness')?.value || '';
   // Populate school filter dropdown
   const schSel = document.getElementById('filterSchool');
   const curSchVal = schSel.value;
@@ -2548,12 +2588,13 @@ function filterOrphans() {
     const matchStat = !statF || o.status === statF;
     const matchSchool = !schoolF || o.school === schoolF;
     const matchEdutype = !edutypeF || o.edutype === edutypeF;
+    const matchWorthiness = !worthinessF || o.worthiness === worthinessF;
     const matchGrade = !gradeF || (o.grade||'') === gradeF;
     const matchCourseGrade = !courseGradeF || (o.coursegrade||'') === courseGradeF;
     const matchStudentType = !studentTypeF || (o.studenttype||'orphan') === studentTypeF;
     const oActive = o.isActive !== false;
     const matchActive = !activeF || (activeF==='active' ? oActive : !oActive);
-    return matchQ && matchAge && matchStat && matchSchool && matchEdutype && matchGrade && matchStudentType && matchCourseGrade && matchActive;
+    return matchQ && matchAge && matchStat && matchSchool && matchEdutype && matchGrade && matchStudentType && matchCourseGrade && matchActive && matchWorthiness;
   });
   filteredOrphans.sort((a,b) => {
     if(sort==='newest') return new Date(b.createdAt)-new Date(a.createdAt);
@@ -2687,6 +2728,8 @@ function openEditModal(id) {
   document.getElementById('f-address').value = o.address||'';
   document.getElementById('f-grade').value = o.grade||'';
   document.getElementById('f-notes').value = o.notes||'';
+  const worthEl = document.getElementById('f-worthiness');
+  if(worthEl) worthEl.value = o.worthiness||'';
   populateSchoolDropdown();
   document.getElementById('f-school').value = o.school||'';
   document.getElementById('f-studenttype').value = o.studenttype||'orphan';
@@ -2730,6 +2773,8 @@ function clearForm() {
   document.getElementById('f-coursegrade').value = '';
   document.getElementById('f-studytime').value = '';
   document.getElementById('f-grade').value = '';
+  const worthClear = document.getElementById('f-worthiness');
+  if(worthClear) worthClear.value = '';
   onGoesSchoolChange();
   onSchoolTypeChange();
   const mErr = document.getElementById('mobileError');
@@ -2842,6 +2887,7 @@ async function saveOrphan() {
     studytime: document.getElementById('f-studytime').value,
     address: document.getElementById('f-address').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
+    worthiness: document.getElementById('f-worthiness')?.value || '',
     photo: currentPhoto,
     attachments: currentAttachments,
   };
@@ -3133,11 +3179,13 @@ function getReportOrphans() {
   const activeF  = document.getElementById('rpt-filter-active')?.value || '';
   const typeF    = document.getElementById('rpt-filter-type')?.value || '';
   const statusF  = document.getElementById('rpt-filter-status')?.value || '';
+  const worthyF  = document.getElementById('rpt-filter-worthy')?.value || '';
   let list = orphans.slice();
   if (activeF === 'active')   list = list.filter(o => o.isActive !== false);
   if (activeF === 'inactive') list = list.filter(o => o.isActive === false);
   if (typeF)   list = list.filter(o => (o.studenttype||'orphan') === typeF);
   if (statusF) list = list.filter(o => o.status === statusF);
+  if (worthyF) list = list.filter(o => o.worthiness === worthyF);
   return list;
 }
 
@@ -3170,6 +3218,8 @@ function renderReports() {
     {type:'grade',      icon:'📚', title:'گزارش صنف (کلاس)',              desc:'تعداد ایتام در هر صنف با آمار کامل'},
     {type:'studenttype', icon:'🔎', title:'یتیم در مقابل بی‌بضاعت',        desc:'مقایسه و گزارش جداگانه یتیمان و اطفال بی‌بضاعت'},
     {type:'active_detail', icon:'📁', title:'گزارش وضعیت پرونده‌ها',      desc:'تفکیک پرونده‌های فعال و غیرفعال با جزئیات'},
+    {type:'sponsor',    icon:'🤝', title:'گزارش کفیل‌ها',                desc:'فهرست کامل کفیل‌ها با ایتام تحت کفالت و آمار'},
+    {type:'worthiness', icon:'🌟', title:'گزارش سطح استحقاق',             desc:'تفکیک بسیار مستحق / مستحق / متوسط با فهرست کامل'},
   ];
   document.getElementById('reportGrid').innerHTML = cards.map(c =>
     `<div class="report-card" onclick="runReport('${c.type}')" dir="rtl">
@@ -3207,6 +3257,8 @@ function runReport(type) {
       const schName = getSchoolName(o.school);
       const eduLabel = o.edutype==='School'?'مکتب': o.edutype==='Course'?'کورس': o.edutype==='Both'?'هر دو':'—';
       const grLabel = o.grade?(o.grade==='university'?'پوهنتون':o.grade==='course'?'کورس':o.grade==='none'?'—':`صنف ${o.grade}`):'—';
+      const wLabel = o.worthiness==='very_worthy'?'🔴 بسیار مستحق':o.worthiness==='worthy'?'🟡 مستحق':o.worthiness==='average'?'🟢 متوسط':'—';
+      const mSponsor = sponsors.find(s=>(s.orphanIds||[]).includes(o.id));
       return `<tr>
         <td class="td-id">${o.id}</td>
         <td class="td-name">${o.name||'—'}</td>
@@ -3222,6 +3274,8 @@ function runReport(type) {
         <td>${o.coursegrade||'—'}</td>
         <td>${schName}</td>
         <td>${eduLabel}</td>
+        <td style="font-family:var(--font-fa);">${wLabel}</td>
+        <td style="font-family:var(--font-fa);color:var(--teal);">${mSponsor?mSponsor.name:'—'}</td>
       </tr>`;
     }).join('');
     out.innerHTML = `<div class="table-wrap" dir="rtl">
@@ -3234,7 +3288,7 @@ function runReport(type) {
         <table>
           <thead><tr>
             <th>شناسه</th><th>نام</th><th>نوع</th><th>سن</th><th>پدر</th><th>مادر</th>
-            <th>سرپرست</th><th>پدر سرپرست</th><th>موبایل</th><th>وضعیت</th><th>صنف در مکتب</th><th>صنف در کورس</th><th>مکتب</th><th>نوع شمولیت</th>
+            <th>سرپرست</th><th>پدر سرپرست</th><th>موبایل</th><th>وضعیت</th><th>صنف در مکتب</th><th>صنف در کورس</th><th>مکتب</th><th>نوع شمولیت</th><th>استحقاق</th><th>کفیل</th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
@@ -3433,6 +3487,85 @@ function runReport(type) {
         <tbody>${gradeRows}</tbody>
       </table></div>
     </div>`;
+  } else if (type === 'sponsor') {
+    const spnRows = sponsors.map(s => {
+      const linked = (s.orphanIds||[]).map(id=>orphans.find(o=>o.id===id)).filter(Boolean);
+      const active = linked.filter(o=>o.isActive!==false).length;
+      return `<tr>
+        <td style="font-weight:600;font-family:var(--font-fa);">${s.name||'—'}</td>
+        <td style="font-family:var(--font-fa);">${s.phone||s.mobile||s.contact||'—'}</td>
+        <td style="font-family:var(--font-fa);">${s.address||'—'}</td>
+        <td><strong style="color:var(--gold);">${linked.length}</strong></td>
+        <td style="color:var(--green);">${active}</td>
+        <td style="font-family:var(--font-fa);font-size:.78rem;">${linked.slice(0,4).map(o=>o.name).join('، ')}${linked.length>4?'...':''}</td>
+      </tr>`;
+    }).join('');
+    const noSpons = orphans.filter(o=>!sponsors.some(s=>(s.orphanIds||[]).includes(o.id))).length;
+    out.innerHTML = `<div class="table-wrap" dir="rtl">
+      <div class="table-toolbar">
+        <span style="font-weight:600;font-family:var(--font-fa);">🤝 گزارش کفیل‌ها (${sponsors.length} کفیل)</span>
+        <span style="color:var(--text2);font-size:.82rem;font-family:var(--font-fa);">ایتام بدون کفیل: ${noSpons}</span>
+        <button class="btn btn-sm btn-secondary" onclick="printReportOutput()" style="font-family:var(--font-fa);">🖨️ چاپ</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr style="font-family:var(--font-fa);">
+            <th>نام کفیل</th><th>تماس</th><th>آدرس</th><th>تعداد ایتام</th><th>فعال</th><th>اسامی ایتام</th>
+          </tr></thead>
+          <tbody>${spnRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  } else if (type === 'worthiness') {
+    const wGroups = [
+      {key:'very_worthy', label:'بسیار مستحق', color:'var(--red)',   bg:'rgba(224,90,107,0.12)'},
+      {key:'worthy',      label:'مستحق',        color:'var(--gold)',  bg:'rgba(201,168,76,0.12)'},
+      {key:'average',     label:'متوسط',         color:'var(--green)', bg:'rgba(76,175,138,0.12)'},
+      {key:'',            label:'ثبت نشده',      color:'var(--text3)', bg:'rgba(90,90,90,0.08)'},
+    ];
+    const makeWTable = list => {
+      if(!list.length) return '<div style="padding:.75rem;color:var(--text3);font-family:var(--font-fa);">پرونده یافت نشد</div>';
+      const rows = list.map(o=>{
+        const sb=o.status==='Healthy'?'badge-good':o.status==='Disabled'?'badge-danger':'badge-warn';
+        const stL=o.status==='Healthy'?'صحتمند':o.status==='Disabled'?'معلول':'بیماری مزمن';
+        const mSponsor = sponsors.find(s=>(s.orphanIds||[]).includes(o.id));
+        return `<tr>
+          <td class="td-id">${o.id}</td>
+          <td class="td-name" style="font-family:var(--font-fa);">${o.name||'—'}</td>
+          <td style="font-family:var(--font-fa);">${o.age||'—'}</td>
+          <td style="font-family:var(--font-fa);">${o.father||'—'}</td>
+          <td style="font-family:var(--font-fa);">${o.guardian||'—'}</td>
+          <td><span class="badge ${sb}">${stL}</span></td>
+          <td style="font-family:var(--font-fa);color:var(--teal);">${mSponsor?mSponsor.name:'—'}</td>
+        </tr>`;
+      }).join('');
+      return `<div style="overflow-x:auto;"><table>
+        <thead><tr style="font-family:var(--font-fa);">
+          <th>شناسه</th><th>نام</th><th>سن</th><th>پدر</th><th>سرپرست</th><th>وضعیت</th><th>کفیل</th>
+        </tr></thead><tbody>${rows}</tbody></table></div>`;
+    };
+    const statsCards = wGroups.map(g=>{
+      const n=orphans.filter(o=>(o.worthiness||'')===(g.key)).length;
+      if(!n&&!g.key) return '';
+      return `<div class="stat-card" style="margin:0;padding:1rem;border-color:${g.color}40;"><div style="font-size:1.5rem;">🌟</div><div class="stat-value" style="color:${g.color};">${n}</div><div class="stat-label" style="font-family:var(--font-fa);">${g.label}</div></div>`;
+    }).filter(Boolean).join('');
+    const sections = wGroups.map(g=>{
+      const list = orphans.filter(o=>(o.worthiness||'')===(g.key));
+      if(!list.length) return '';
+      return `<div class="table-wrap" style="margin-bottom:1rem;">
+        <div class="table-toolbar" style="background:${g.bg};">
+          <span style="font-family:var(--font-fa);font-weight:700;color:${g.color};">${g.label} (${list.length} نفر)</span>
+          <button class="btn btn-sm btn-secondary" onclick="printReportOutput()" style="font-family:var(--font-fa);">🖨️ چاپ</button>
+        </div>
+        ${makeWTable(list)}
+      </div>`;
+    }).filter(Boolean).join('');
+    out.innerHTML = `<div dir="rtl">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1.25rem;">${statsCards}</div>
+      ${sections}
+    </div>`;
+
   } else if (type === 'subj_top') {
     // For each subject, find which student scored highest
     const subjNames = subjects.map(s => sName(s));
@@ -3896,14 +4029,32 @@ function renderFamilies() {
     );
   }
 
+  // Filter by family size
+  const sizeF = document.getElementById('fam-size-filter')?.value || '';
+  if (sizeF === 'small')  families = families.filter(f => f.members.length <= 3);
+  if (sizeF === 'medium') families = families.filter(f => f.members.length >= 1 && f.members.length <= 5);
+  if (sizeF === 'large')  families = families.filter(f => f.members.length > 5);
+
+  // Filter by worthiness (if ANY member has that worthiness)
+  const worthyF = document.getElementById('fam-worthy-filter')?.value || '';
+  if (worthyF) {
+    families = families.filter(f => f.members.some(m => m.worthiness === worthyF));
+  }
+
   // Stats
   const statsEl = document.getElementById('fam-stats');
-  const multiFam = families.filter(f=>f.members.length>1).length;
+  const smallFam  = families.filter(f=>f.members.length<=3).length;
+  const mediumFam = families.filter(f=>f.members.length>3&&f.members.length<=5).length;
+  const largeFam  = families.filter(f=>f.members.length>5).length;
+  const veryWorthy = families.reduce((s,f)=>s+f.members.filter(m=>m.worthiness==='very_worthy').length,0);
   statsEl.innerHTML = [
     `<span style="background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:6px 14px;font-size:.82rem;color:var(--gold);">🏠 جمع خانواده‌ها: <strong>${families.length}</strong></span>`,
-    `<span style="background:rgba(91,140,245,0.1);border:1px solid rgba(91,140,245,0.25);border-radius:8px;padding:6px 14px;font-size:.82rem;color:var(--blue);">👨‍👩‍👧‍👦 خانواده‌های چند نفره: <strong>${multiFam}</strong></span>`,
+    `<span style="background:rgba(91,140,245,0.1);border:1px solid rgba(91,140,245,0.25);border-radius:8px;padding:6px 14px;font-size:.82rem;color:var(--blue);">🔵 کوچک: <strong>${smallFam}</strong></span>`,
+    `<span style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:8px;padding:6px 14px;font-size:.82rem;color:var(--gold);">🟡 متوسط: <strong>${mediumFam}</strong></span>`,
+    `<span style="background:rgba(224,90,107,0.1);border:1px solid rgba(224,90,107,0.25);border-radius:8px;padding:6px 14px;font-size:.82rem;color:var(--red);">🔴 بزرگ: <strong>${largeFam}</strong></span>`,
     `<span style="background:rgba(62,207,207,0.1);border:1px solid rgba(62,207,207,0.25);border-radius:8px;padding:6px 14px;font-size:.82rem;color:var(--teal);">👶 جمع افراد: <strong>${families.reduce((s,f)=>s+f.members.length,0)}</strong></span>`,
-  ].join('');
+    veryWorthy ? `<span style="background:rgba(224,90,107,0.1);border:1px solid rgba(224,90,107,0.3);border-radius:8px;padding:6px 14px;font-size:.82rem;color:var(--red);">🔴 بسیار مستحق: <strong>${veryWorthy}</strong></span>` : '',
+  ].filter(Boolean).join('');
 
   // Update badge
   const badge = document.getElementById('familyCountBadge');
@@ -3915,9 +4066,16 @@ function renderFamilies() {
     return;
   }
 
+  const worthinessLabel = w => w==='very_worthy'?'🔴 بسیار مستحق':w==='worthy'?'🟡 مستحق':w==='average'?'🟢 متوسط':'';
+  const worthinessColor = w => w==='very_worthy'?'var(--red)':w==='worthy'?'var(--gold)':w==='average'?'var(--green)':'var(--text3)';
+  const sizeLabel = n => n<=3?'🔵 کوچک':n<=5?'🟡 متوسط':'🔴 بزرگ';
+  const sizeColor = n => n<=3?'rgba(91,140,245,0.18)':n<=5?'rgba(201,168,76,0.18)':'rgba(224,90,107,0.18)';
+
   listEl.innerHTML = families.map(f => {
     const statusColors = { Healthy:'var(--teal)', Disabled:'var(--red)', Chronic:'var(--gold)' };
-    const memberRows = f.members.map((m,i) => `
+    const memberRows = f.members.map((m,i) => {
+      const wLabel = worthinessLabel(m.worthiness);
+      return `
       <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:3px;">
         <span style="width:22px;height:22px;border-radius:50%;background:rgba(201,168,76,0.15);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--gold);font-weight:700;">${i+1}</span>
         <span style="flex:1;font-weight:${i===0?'600':'400'};color:var(--text);font-family:var(--font-fa);">${m.name||'—'}</span>
@@ -3925,12 +4083,15 @@ function renderFamilies() {
         ${m.grandfather?`<span style="font-size:.72rem;color:var(--text3);font-family:var(--font-fa);">جد: ${m.grandfather}</span>`:''}
         <span style="font-size:.75rem;color:var(--text3);">سن: ${m.age||'—'}</span>
         <span style="font-size:.72rem;color:${statusColors[m.status]||'var(--text3)'};">${m.status==='Healthy'?'سالم':m.status==='Disabled'?'معیوب':'مریض مزمن'}</span>
+        ${wLabel?`<span style="font-size:.7rem;font-family:var(--font-fa);color:${worthinessColor(m.worthiness)};">${wLabel}</span>`:''}
         <span style="font-size:.72rem;color:${m.isActive===false?'var(--red)':'var(--teal)'};">${m.isActive===false?'🔴 غیرفعال':'✅ فعال'}</span>
         <button onclick="openEditModal('${m.id}')" style="background:rgba(91,140,245,0.15);border:1px solid rgba(91,140,245,0.3);color:var(--blue);border-radius:5px;padding:2px 8px;font-size:.68rem;cursor:pointer;">✏️ ویرایش</button>
-      </div>`).join('');
+      </div>`;}).join('');
     // Build ولدیت label
     const waldiyat = f.father + (f.grandfather ? ' ولد ' + f.grandfather : '');
     const activeCount = f.members.filter(m=>m.isActive!==false).length;
+    // sponsor for this family (linked to eldest)
+    const famSponsor = sponsors.find(s=>(s.orphanIds||[]).some(id=>f.members.find(m=>m.id===id)));
     return `
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
       <div style="display:flex;align-items:center;gap:1rem;padding:.85rem 1.1rem;background:rgba(201,168,76,0.06);border-bottom:1px solid var(--border);">
@@ -3942,17 +4103,121 @@ function renderFamilies() {
             ${f.grandfather?`<span> &nbsp;·&nbsp; جد: <strong style="color:var(--text2)">${f.grandfather}</strong></span>`:''}
             ${f.mother?`<span> &nbsp;·&nbsp; مادر: <strong style="color:var(--text2)">${f.mother}</strong></span>`:''}
             ${f.guardian?`<span> &nbsp;·&nbsp; سرپرست: <strong style="color:var(--text2)">${f.guardian}</strong></span>`:''}
+            ${famSponsor?`<span> &nbsp;·&nbsp; 🤝 کفیل: <strong style="color:var(--teal)">${famSponsor.name}</strong></span>`:''}
             <span> &nbsp;·&nbsp; طفل کلان: <strong style="color:var(--text2)">${f.eldest?.name||'—'}</strong></span>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-          <span style="background:rgba(201,168,76,0.2);color:var(--gold);border-radius:20px;padding:3px 12px;font-size:.8rem;font-weight:700;">${f.members.length} نفر</span>
+          <span style="background:${sizeColor(f.members.length)};border-radius:20px;padding:3px 12px;font-size:.8rem;font-weight:700;">${sizeLabel(f.members.length)} · ${f.members.length} نفر</span>
           ${activeCount < f.members.length ? `<span style="background:rgba(62,207,207,0.15);color:var(--teal);border-radius:20px;padding:2px 9px;font-size:.72rem;">${activeCount} فعال</span>` : ''}
         </div>
       </div>
       <div style="padding:.75rem 1rem;">${memberRows}</div>
     </div>`;
   }).join('');
+}
+
+// ── PRINT FAMILIES ──────────────────────────────────────
+function printFamilies() {
+  const q = (document.getElementById('fam-search')?.value || '').trim().toLowerCase();
+  const sizeF = document.getElementById('fam-size-filter')?.value || '';
+  const worthyF = document.getElementById('fam-worthy-filter')?.value || '';
+  const groups = {};
+  orphans.forEach(o => {
+    const father = (o.father || '').trim();
+    const grandfather = (o.grandfather || '').trim();
+    const key = father ? (father + '|||' + grandfather) : '__unknown__';
+    if (!groups[key]) groups[key] = { father, grandfather, members: [] };
+    groups[key].members.push(o);
+  });
+  let families = Object.values(groups).map(g => ({
+    father: g.father, grandfather: g.grandfather,
+    members: g.members.sort((a,b)=>(b.age||0)-(a.age||0)),
+    mother: g.members[0]?.mother || '',
+    guardian: g.members[0]?.guardian || '',
+    eldest: g.members.reduce((a,b)=>((b.age||0)>(a.age||0)?b:a), g.members[0]),
+  })).filter(f => f.father || f.members.length > 1);
+  families.sort((a,b)=>{
+    if(b.members.length!==a.members.length) return b.members.length-a.members.length;
+    return (a.father||'').localeCompare(b.father||'');
+  });
+  if(q) families = families.filter(f=>f.father.toLowerCase().includes(q)||f.grandfather.toLowerCase().includes(q)||f.mother.toLowerCase().includes(q)||f.guardian.toLowerCase().includes(q)||(f.eldest?.name||'').toLowerCase().includes(q)||f.members.some(m=>(m.name||'').toLowerCase().includes(q)));
+  if(sizeF==='small')  families = families.filter(f=>f.members.length<=3);
+  if(sizeF==='medium') families = families.filter(f=>f.members.length<=5);
+  if(sizeF==='large')  families = families.filter(f=>f.members.length>5);
+  if(worthyF) families = families.filter(f=>f.members.some(m=>m.worthiness===worthyF));
+
+  const wLabel = w=>w==='very_worthy'?'بسیار مستحق':w==='worthy'?'مستحق':w==='average'?'متوسط':'—';
+  const sLabel = n=>n<=3?'کوچک':n<=5?'متوسط':'بزرگ';
+  const w = window.open('','_blank');
+  const filterInfo = [
+    sizeF==='small'?'کوچک (≤3)':sizeF==='medium'?'متوسط (≤5)':sizeF==='large'?'بزرگ (>5)':'',
+    worthyF?wLabel(worthyF):'',
+    q?('جستجو: ' + q):'',
+  ].filter(Boolean).join(' | ');
+  w.document.write(`<!DOCTYPE html><html dir="rtl" lang="fa"><head><meta charset="UTF-8"><title>گزارش خانواده‌ها</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap');
+    body{font-family:'Vazirmatn',sans-serif;direction:rtl;margin:1cm;font-size:11px;color:#222;}
+    h2{color:#4a7c3f;font-size:14px;margin-bottom:4px;}
+    .info{font-size:10px;color:#888;margin-bottom:10px;}
+    .family-block{border:1px solid #ccc;border-radius:6px;margin-bottom:10px;page-break-inside:avoid;}
+    .family-header{background:#f5f5e8;padding:6px 10px;font-weight:700;font-size:11px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd;}
+    .family-meta{font-size:9px;color:#666;margin-top:2px;}
+    table{width:100%;border-collapse:collapse;font-size:10px;}
+    th,td{border:1px solid #ddd;padding:4px 6px;}
+    th{background:#f0f5ee;font-weight:600;}
+    tr:nth-child(even){background:#fafafa;}
+    .badge-worthy{color:#c00;font-weight:700;}
+    .badge-medium{color:#996600;font-weight:600;}
+    .badge-avg{color:#2a7a2a;}
+    .size-small{color:#3366cc;}
+    .size-medium{color:#aa8800;}
+    .size-large{color:#cc0000;}
+    @media print{body{margin:.5cm;}}
+  </style></head><body>
+  <div style="display:flex;align-items:center;gap:10px;border-bottom:2px solid #4a7c3f;padding-bottom:6px;margin-bottom:8px;">
+    <div>
+      <div style="font-size:14px;font-weight:700;color:#4a7c3f;">بخش اداری موسسه خیریه رفاه یتیم</div>
+      <div style="font-size:9px;color:#5b8cd0;">Orphan Prosperity Charity Organization</div>
+    </div>
+  </div>
+  <h2>گزارش خانواده‌ها — ${new Date().toLocaleDateString('fa-IR')}</h2>
+  <div class="info">مجموع: ${families.length} خانواده${filterInfo?' | فیلتر: '+filterInfo:''}</div>
+  ${families.map(f=>{
+    const waldiyat = f.father + (f.grandfather?' ولد '+f.grandfather:'');
+    const famSponsor = sponsors.find(s=>(s.orphanIds||[]).some(id=>f.members.find(m=>m.id===id)));
+    const szCls = f.members.length<=3?'size-small':f.members.length<=5?'size-medium':'size-large';
+    return `<div class="family-block">
+      <div class="family-header">
+        <span>👨‍👩‍👧 خانواده ${waldiyat}</span>
+        <span class="${szCls}">${sLabel(f.members.length)} · ${f.members.length} نفر</span>
+      </div>
+      <div class="family-meta" style="padding:4px 10px;">
+        ${f.father?'پدر: <strong>'+f.father+'</strong>':''}
+        ${f.grandfather?' | جد: '+f.grandfather:''}
+        ${f.mother?' | مادر: '+f.mother:''}
+        ${f.guardian?' | سرپرست: '+f.guardian:''}
+        ${famSponsor?' | 🤝 کفیل: <strong style="color:#2a7a2a;">'+famSponsor.name+'</strong>':''}
+      </div>
+      <table><thead><tr><th>#</th><th>نام</th><th>سن</th><th>وضعیت جسمی</th><th>سطح استحقاق</th><th>کفیل</th><th>وضعیت پرونده</th></tr></thead>
+      <tbody>${f.members.map((m,i)=>{
+        const wCls = m.worthiness==='very_worthy'?'badge-worthy':m.worthiness==='worthy'?'badge-medium':'badge-avg';
+        const mSponsor = sponsors.find(s=>(s.orphanIds||[]).includes(m.id));
+        return `<tr>
+          <td>${i+1}</td>
+          <td>${m.name||'—'}</td>
+          <td>${m.age||'—'}</td>
+          <td>${m.status==='Healthy'?'سالم':m.status==='Disabled'?'معلول':'بیماری مزمن'}</td>
+          <td class="${wCls}">${wLabel(m.worthiness)}</td>
+          <td>${mSponsor?mSponsor.name:'—'}</td>
+          <td>${m.isActive===false?'غیرفعال':'فعال'}</td>
+        </tr>`;
+      }).join('')}</tbody></table>
+    </div>`;
+  }).join('')}
+  </body></html>`);
+  w.document.close(); w.print();
 }
 
 // ── SYSTEM RESET ──────────────────────────────────────
@@ -4111,7 +4376,7 @@ function printTableFarsi() {
   </div>
   <h2 style="font-size:13px;color:#333;">پرونده‌های ایتام — ${new Date().toLocaleDateString('fa-IR')}</h2>
   <p style="color:#888;font-size:10px;">مجموع: ${filteredOrphans.length} پرونده</p>
-  <table><thead><tr><th>شناسه</th><th>اسم</th><th>ولد</th><th>ولدیت</th><th>جنسیت</th><th>کتگوری شاگرد</th><th>سن</th><th>سرپرست</th><th>موبایل</th><th>صنف در مکتب</th><th>صنف در کورس</th><th>مکتب</th><th>نوع شمولیت</th><th>وضعیت جسمی</th><th>وضعیت پرونده</th></tr></thead>
+  <table><thead><tr><th>شناسه</th><th>اسم</th><th>ولد</th><th>ولدیت</th><th>جنسیت</th><th>کتگوری شاگرد</th><th>سن</th><th>سرپرست</th><th>موبایل</th><th>صنف در مکتب</th><th>صنف در کورس</th><th>مکتب</th><th>نوع شمولیت</th><th>وضعیت جسمی</th><th>استحقاق</th><th>کفیل</th><th>وضعیت پرونده</th></tr></thead>
   <tbody>${filteredOrphans.map(o=>{
     const st=o.status==='Healthy'?'صحتمند':o.status==='Disabled'?'معلول':'بیماری مزمن';
     const edu=o.edutype==='School'?'مکتب':o.edutype==='Course'?'کورس':o.edutype==='Both'?'هر دو':'—';
@@ -4119,8 +4384,10 @@ function printTableFarsi() {
     const cat=(o.studenttype||'orphan')==='needy'?'بی‌بضاعت':'یتیم';
     const gen=o.gender||'—';
     const act=o.isActive===false?'غیرفعال':'فعال';
+    const wLabel=o.worthiness==='very_worthy'?'بسیار مستحق':o.worthiness==='worthy'?'مستحق':o.worthiness==='average'?'متوسط':'—';
+    const mSpons=sponsors.find(s=>(s.orphanIds||[]).includes(o.id));
     const rowStyle=o.isActive===false?'opacity:0.55;background:#fff8f8;':'';
-    return `<tr style="${rowStyle}"><td>${o.id}</td><td>${o.name||''}</td><td>${o.father||''}</td><td>${o.grandfather||''}</td><td>${gen}</td><td>${cat}</td><td>${o.age||''}</td><td>${o.guardian||'—'}</td><td style='direction:ltr;text-align:right;'>${o.mobile||''}</td><td>${gr2}</td><td>${o.coursegrade||'—'}</td><td>${getSchoolName(o.school)}</td><td>${edu}</td><td>${st}</td><td>${act}</td></tr>`;
+    return `<tr style="${rowStyle}"><td>${o.id}</td><td>${o.name||''}</td><td>${o.father||''}</td><td>${o.grandfather||''}</td><td>${gen}</td><td>${cat}</td><td>${o.age||''}</td><td>${o.guardian||'—'}</td><td style='direction:ltr;text-align:right;'>${o.mobile||''}</td><td>${gr2}</td><td>${o.coursegrade||'—'}</td><td>${getSchoolName(o.school)}</td><td>${edu}</td><td>${st}</td><td>${wLabel}</td><td>${mSpons?mSpons.name:'—'}</td><td>${act}</td></tr>`;
   }).join('')}</tbody></table></body></html>`);
   w.document.close(); w.print();
 }
