@@ -604,7 +604,7 @@ body.rtl .toast{right:auto;left:2rem;}
       <div class="page-subtitle">ایتام با ولدیت مشترک — گروه‌بندی خودکار</div>
     </div>
     <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
-      <input class="fi" type="search" id="fam-search" placeholder="🔍 جستجو بر اساس نام مادر، سرپرست یا طفل کلان..." style="width:320px;font-size:.85rem;" oninput="renderFamilies()">
+      <input class="fi" type="search" id="fam-search" placeholder="🔍 جستجو بر اساس اسم، ولد، جد، مادر یا سرپرست..." style="width:340px;font-size:.85rem;" oninput="renderFamilies()">
       <button class="btn btn-secondary btn-sm" onclick="document.getElementById('fam-search').value='';renderFamilies()">× پاک</button>
     </div>
   </div>
@@ -806,6 +806,27 @@ body.rtl .toast{right:auto;left:2rem;}
 <div class="section" id="sec-reports">
   <div class="page-header">
     <div><div class="page-title" id="pg-rep">Reports</div><div class="page-subtitle" id="pg-rep-sub">Generate system reports</div></div>
+  </div>
+  <!-- Report filters -->
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1.25rem;padding:1rem 1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);" dir="rtl">
+    <span style="font-family:var(--font-fa);font-size:.85rem;font-weight:600;color:var(--gold);">🔽 فیلتر گزارش:</span>
+    <select id="rpt-filter-active" onchange="renderReports()" style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.42rem .75rem;color:var(--text);font-family:var(--font-fa);font-size:.84rem;outline:none;cursor:pointer;">
+      <option value="">✅ فعال + غیرفعال (همه)</option>
+      <option value="active">✅ فقط پرونده‌های فعال</option>
+      <option value="inactive">🔴 فقط پرونده‌های غیرفعال</option>
+    </select>
+    <select id="rpt-filter-type" onchange="renderReports()" style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.42rem .75rem;color:var(--text);font-family:var(--font-fa);font-size:.84rem;outline:none;cursor:pointer;">
+      <option value="">🕊️ یتیم + 🤝 بی‌بضاعت</option>
+      <option value="orphan">🕊️ فقط یتیمان</option>
+      <option value="needy">🤝 فقط بی‌بضاعتان</option>
+    </select>
+    <select id="rpt-filter-status" onchange="renderReports()" style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.42rem .75rem;color:var(--text);font-family:var(--font-fa);font-size:.84rem;outline:none;cursor:pointer;">
+      <option value="">همه وضعیت‌های صحی</option>
+      <option value="Healthy">صحتمند</option>
+      <option value="Disabled">معلول</option>
+      <option value="Chronic">بیماری مزمن</option>
+    </select>
+    <div id="rpt-filter-summary" style="font-family:var(--font-fa);font-size:.78rem;color:var(--text2);margin-right:auto;"></div>
   </div>
   <div class="report-grid" id="reportGrid"></div>
   <div id="reportOutput" style="margin-top:1.5rem;"></div>
@@ -1308,9 +1329,23 @@ body.rtl .toast{right:auto;left:2rem;}
           <label class="fl">نام مادر</label>
           <input class="fi" type="text" id="f-mother" placeholder="نام مادر" lang="fa">
         </div>
-        <div class="fg">
-          <label class="fl">سال تولد (شمسی)</label>
-          <input class="fi" type="text" inputmode="numeric" id="f-birthyear" placeholder="مثال: ۱۳۹۲" maxlength="4" oninput="this.value=toEnglishDigits(this.value); autoCalcAge();">
+        <div class="fg" style="grid-column:span 1;">
+          <label class="fl">📅 تاریخ تولد (شمسی)</label>
+          <div style="display:flex;gap:3px;align-items:center;">
+            <select class="fi" id="f-birthyear" onchange="autoCalcAge()" style="flex:2;padding:.38rem .3rem;font-size:.76rem;">
+              <option value="">سال</option>
+            </select>
+            <select class="fi" id="f-birthmonth" onchange="autoCalcAge()" style="flex:2;padding:.38rem .3rem;font-size:.76rem;">
+              <option value="">ماه</option>
+              <option value="1">حمل</option><option value="2">ثور</option><option value="3">جوزا</option>
+              <option value="4">سرطان</option><option value="5">اسد</option><option value="6">سنبله</option>
+              <option value="7">میزان</option><option value="8">عقرب</option><option value="9">قوس</option>
+              <option value="10">جدی</option><option value="11">دلو</option><option value="12">حوت</option>
+            </select>
+            <select class="fi" id="f-birthday" onchange="autoCalcAge()" style="flex:1.5;padding:.38rem .3rem;font-size:.76rem;">
+              <option value="">روز</option>
+            </select>
+          </div>
         </div>
         <div class="fg">
           <label class="fl">سن <span style="color:var(--text3);font-size:.68rem;">(خودکار)</span></label>
@@ -2447,7 +2482,7 @@ async function bootApp() {
   document.getElementById('gradCountBadge').textContent    = graduates.length;
   const famBadge = document.getElementById('familyCountBadge');
   if (famBadge) {
-    const fams = new Set(orphans.map(o=>(o.father||'').trim()).filter(Boolean));
+    const fams = new Set(orphans.map(o=>((o.father||'').trim()+'|||'+(o.grandfather||'').trim())).filter(k=>k!=='|||'));
     famBadge.textContent = fams.size;
   }
   updateBookBadge();
@@ -2611,6 +2646,8 @@ function openAddModal() {
   document.getElementById('editId').value = '';
   document.getElementById('modalTitle').textContent = currentLang==='fa'?'افزودن پرونده یتیم جدید':'Add Orphan Record';
   clearForm();
+  _populateBirthYearSelect();
+  _populateBirthDaySelect();
   populateSchoolDropdown();
   openModal('orphanModal');
   setTimeout(setupFormKeyboardSwitch, 100);
@@ -2627,8 +2664,14 @@ function openEditModal(id) {
   document.getElementById('f-name').value = o.name||'';
   document.getElementById('f-name-en').value = o.nameEn||'';
   document.getElementById('f-age').value = o.age||'';
+  _populateBirthYearSelect();
+  _populateBirthDaySelect();
   const byEl = document.getElementById('f-birthyear');
   if (byEl) byEl.value = o.birthyear||'';
+  const bmEl = document.getElementById('f-birthmonth');
+  if (bmEl) bmEl.value = o.birthmonth||'';
+  const bdEl = document.getElementById('f-birthday');
+  if (bdEl) bdEl.value = o.birthday||'';
   const tzEl = document.getElementById('f-tazkira');
   if (tzEl) tzEl.value = o.tazkira||'';
   document.getElementById('f-father').value = o.father||'';
@@ -2673,7 +2716,7 @@ function openEditModal(id) {
 }
 
 function clearForm() {
-  ['f-name','f-age','f-father','f-grandfather','f-mother','f-family','f-guardian','f-guardian-father','f-mobile','f-address','f-notes','f-name-en','f-father-en','f-school-custom','f-birthyear','f-tazkira'].forEach(id => {
+  ['f-name','f-age','f-father','f-grandfather','f-mother','f-family','f-guardian','f-guardian-father','f-mobile','f-address','f-notes','f-name-en','f-father-en','f-school-custom','f-birthyear','f-birthmonth','f-birthday','f-tazkira'].forEach(id => {
     const el = document.getElementById(id);
     if(el){ el.value=''; el.classList.remove('error'); }
   });
@@ -2717,6 +2760,14 @@ function handleMobileInput(el) {
 }
 
 async function saveOrphan() {
+  // Disable save button to prevent duplicate submissions
+  const saveBtn = document.getElementById('ml-save');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ در حال ذخیره...';
+    saveBtn.style.opacity = '0.65';
+  }
+
   // Clear previous validation
   const validEl = document.getElementById('formValidationMsg');
   validEl.style.display = 'none';
@@ -2753,6 +2804,8 @@ async function saveOrphan() {
   if (errors.length > 0) {
     validEl.innerHTML = '⚠️ ' + errors.join(' &nbsp;|&nbsp; ');
     validEl.style.display = 'block';
+    // Re-enable button on validation failure
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 ذخیره پرونده'; saveBtn.style.opacity = '1'; }
     return;
   }
 
@@ -2775,7 +2828,9 @@ async function saveOrphan() {
     guardianFather: document.getElementById('f-guardian-father').value.trim(),
     grade: goesSchool ? document.getElementById('f-grade').value : 'none',
     mobile: mobileDigits,
-    birthyear: parseInt(toEnglishDigits(document.getElementById('f-birthyear')?.value||''))||null,
+    birthyear: parseInt(document.getElementById('f-birthyear')?.value||'')||null,
+    birthmonth: parseInt(document.getElementById('f-birthmonth')?.value||'')||null,
+    birthday: parseInt(document.getElementById('f-birthday')?.value||'')||null,
     tazkira: document.getElementById('f-tazkira')?.value.trim()||'',
     goesSchool: goesSchool,
     schoolType: goesSchool ? schoolType : '',
@@ -2815,6 +2870,8 @@ async function saveOrphan() {
   } catch(err) {
     validEl.innerHTML = '❌ خطا در ذخیره‌سازی: ' + err.message;
     validEl.style.display = 'block';
+    // Re-enable button on error so user can try again
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 ذخیره پرونده'; saveBtn.style.opacity = '1'; }
     console.error('Save error:', err);
   }
 }
@@ -2909,7 +2966,14 @@ function viewOrphan(id) {
     {label:t('ml.school'), value:getSchoolName(o.school)},
     {label:'نوع شمولیت', value:o.edutype==='School'?'مکتب':o.edutype==='Course'?'کورس':o.edutype==='Both'?'هر دو':o.edutype||'—'},
     {label:'صنف در کورس', value:o.coursegrade||'—'},
-    {label:t('field.dob'), value:o.createdAt?new Date(o.createdAt).toLocaleDateString():'—'},
+    {label:t('field.dob'), value: (()=>{
+      const shamsiMonths = ['','حمل','ثور','جوزا','سرطان','اسد','سنبله','میزان','عقرب','قوس','جدی','دلو','حوت'];
+      const parts = [];
+      if(o.birthday) parts.push(o.birthday);
+      if(o.birthmonth) parts.push(shamsiMonths[o.birthmonth]||o.birthmonth);
+      if(o.birthyear) parts.push(o.birthyear);
+      return parts.length ? parts.join(' ') : (o.createdAt?new Date(o.createdAt).toLocaleDateString():'—');
+    })()},
   ];
   const attachHTML = o.attachments && o.attachments.length ? 
     o.attachments.map(f=>`<div class="file-item"><span>📎</span><span class="fname">${f.name}</span><span class="fsize">${(f.size/1024).toFixed(1)} KB</span><a href="${f.data}" download="${f.name}" class="btn btn-sm btn-secondary" style="padding:2px 8px;font-size:.72rem;">⬇</a></div>`).join('') : '';
@@ -3065,9 +3129,39 @@ function renderDashboard() {
 // ======================================================
 // REPORTS
 // ======================================================
+function getReportOrphans() {
+  const activeF  = document.getElementById('rpt-filter-active')?.value || '';
+  const typeF    = document.getElementById('rpt-filter-type')?.value || '';
+  const statusF  = document.getElementById('rpt-filter-status')?.value || '';
+  let list = orphans.slice();
+  if (activeF === 'active')   list = list.filter(o => o.isActive !== false);
+  if (activeF === 'inactive') list = list.filter(o => o.isActive === false);
+  if (typeF)   list = list.filter(o => (o.studenttype||'orphan') === typeF);
+  if (statusF) list = list.filter(o => o.status === statusF);
+  return list;
+}
+
 function renderReports() {
+  // Update filter summary
+  const activeF  = document.getElementById('rpt-filter-active')?.value || '';
+  const typeF    = document.getElementById('rpt-filter-type')?.value || '';
+  const statusF  = document.getElementById('rpt-filter-status')?.value || '';
+  const filtered = getReportOrphans();
+  const sumEl = document.getElementById('rpt-filter-summary');
+  if (sumEl) {
+    const parts = [];
+    if (activeF === 'active')   parts.push('✅ فعال');
+    if (activeF === 'inactive') parts.push('🔴 غیرفعال');
+    if (typeF === 'orphan') parts.push('🕊️ یتیم');
+    if (typeF === 'needy')  parts.push('🤝 بی‌بضاعت');
+    if (statusF) parts.push(statusF==='Healthy'?'صحتمند':statusF==='Disabled'?'معلول':'بیماری مزمن');
+    sumEl.innerHTML = parts.length
+      ? `فیلتر: <strong style="color:var(--gold);">${parts.join(' | ')}</strong> &nbsp;—&nbsp; نتیجه: <strong style="color:var(--teal);">${filtered.length} پرونده</strong>`
+      : `مجموع پرونده‌ها: <strong style="color:var(--teal);">${filtered.length}</strong>`;
+  }
+
   const cards = [
-    {type:'full',       icon:'📋', title:'گزارش کامل پرونده‌ها',         desc:'فهرست کامل تمام پرونده‌های ایتام با همه فیلدها'},
+    {type:'full',       icon:'📋', title:'گزارش کامل پرونده‌ها',         desc:'فهرست کامل پرونده‌های فیلترشده با همه فیلدها'},
     {type:'age',        icon:'📊', title:'گزارش گروه سنی',               desc:'توزیع ایتام در گروه‌های سنی مختلف'},
     {type:'status',     icon:'🏥', title:'گزارش وضعیت جسمی',             desc:'تفکیک وضعیت جسمی و آمار'},
     {type:'guardian',   icon:'🛡️', title:'گزارش سرپرستی',               desc:'ایتام با سرپرست و بدون سرپرست'},
@@ -3075,6 +3169,7 @@ function renderReports() {
     {type:'edutype',    icon:'🎓', title:'گزارش نوع شمولیت',              desc:'مکتب / کورس / هر دو — آمار خودکار'},
     {type:'grade',      icon:'📚', title:'گزارش صنف (کلاس)',              desc:'تعداد ایتام در هر صنف با آمار کامل'},
     {type:'studenttype', icon:'🔎', title:'یتیم در مقابل بی‌بضاعت',        desc:'مقایسه و گزارش جداگانه یتیمان و اطفال بی‌بضاعت'},
+    {type:'active_detail', icon:'📁', title:'گزارش وضعیت پرونده‌ها',      desc:'تفکیک پرونده‌های فعال و غیرفعال با جزئیات'},
   ];
   document.getElementById('reportGrid').innerHTML = cards.map(c =>
     `<div class="report-card" onclick="runReport('${c.type}')" dir="rtl">
@@ -3087,7 +3182,23 @@ function renderReports() {
 
 function runReport(type) {
   const out = document.getElementById('reportOutput');
-  const total = orphans.length;
+  const reportOrphans = getReportOrphans();
+  const total = reportOrphans.length;
+
+  // Build filter label for report header
+  const activeF = document.getElementById('rpt-filter-active')?.value||'';
+  const typeF   = document.getElementById('rpt-filter-type')?.value||'';
+  const statusF = document.getElementById('rpt-filter-status')?.value||'';
+  const filterParts = [];
+  if (activeF==='active') filterParts.push('فعال');
+  if (activeF==='inactive') filterParts.push('غیرفعال');
+  if (typeF==='orphan') filterParts.push('یتیم');
+  if (typeF==='needy')  filterParts.push('بی‌بضاعت');
+  if (statusF) filterParts.push(statusF==='Healthy'?'صحتمند':statusF==='Disabled'?'معلول':'بیماری مزمن');
+  const filterLabel = filterParts.length ? ` (فیلتر: ${filterParts.join('، ')})` : '';
+
+  // Use reportOrphans instead of orphans for all report computations
+  const orphans = reportOrphans;
 
   if (type === 'full') {
     const rows = orphans.map(o => {
@@ -3115,7 +3226,7 @@ function runReport(type) {
     }).join('');
     out.innerHTML = `<div class="table-wrap" dir="rtl">
       <div class="table-toolbar">
-        <span style="font-weight:600;font-family:var(--font-fa);">📋 گزارش کامل پرونده‌ها</span>
+        <span style="font-weight:600;font-family:var(--font-fa);">📋 گزارش کامل پرونده‌ها${filterLabel}</span>
         <span style="color:var(--text2);font-size:.82rem;">مجموع: ${total} پرونده</span>
         <button class="btn btn-sm btn-secondary" onclick="printReportOutput()">🖨️ چاپ</button>
       </div>
@@ -3501,6 +3612,69 @@ function runReport(type) {
         ${makeTypeTable(needyList,'needy')}
       </div>
     </div>`;
+
+  } else if (type === 'active_detail') {
+    // Active vs Inactive breakdown
+    const activeList   = orphans.filter(o => o.isActive !== false);
+    const inactiveList = orphans.filter(o => o.isActive === false);
+
+    function makeActiveTable(list, label, color) {
+      if (!list.length) return `<div style="padding:1.5rem;text-align:center;color:var(--text3);font-family:var(--font-fa);">پرونده‌ای یافت نشد.</div>`;
+      const rows = list.map((o,i) => {
+        const sb = o.status==='Healthy'?'badge-good':o.status==='Disabled'?'badge-danger':'badge-warn';
+        const stl = o.status==='Healthy'?'صحتمند':o.status==='Disabled'?'معلول':'بیماری مزمن';
+        const gr  = o.grade?(o.grade==='university'?'پوهنتون':o.grade==='course'?'کورس':o.grade==='none'?'—':`صنف ${o.grade}`):'—';
+        const typBadge = (o.studenttype||'orphan')==='needy'?'<span style="color:var(--teal);font-size:.72rem;">🤝 بی‌بضاعت</span>':'<span style="color:var(--gold);font-size:.72rem;">🕊️ یتیم</span>';
+        const wald = [o.father,o.grandfather].filter(Boolean).join(' ولد ');
+        return `<tr>
+          <td style="color:var(--text3);font-size:.75rem;">${i+1}</td>
+          <td class="td-id">${o.id}</td>
+          <td class="td-name" style="font-family:var(--font-fa);">${o.name||'—'}</td>
+          <td style="font-family:var(--font-fa);font-size:.8rem;">${wald||'—'}</td>
+          <td style="text-align:center;">${o.age||'—'}</td>
+          <td>${typBadge}</td>
+          <td><span class="badge ${sb}" style="font-family:var(--font-fa);">${stl}</span></td>
+          <td style="font-family:var(--font-fa);font-size:.8rem;">${gr}</td>
+          <td style="font-family:var(--font-fa);font-size:.78rem;direction:ltr;text-align:right;">${o.mobile||'—'}</td>
+        </tr>`;
+      }).join('');
+      return `<div style="overflow-x:auto;"><table>
+        <thead><tr style="font-family:var(--font-fa);">
+          <th>#</th><th>شناسه</th><th>نام</th><th>ولدیت</th><th>سن</th><th>نوع</th><th>وضعیت</th><th>صنف</th><th>موبایل</th>
+        </tr></thead><tbody>${rows}</tbody></table></div>`;
+    }
+
+    out.innerHTML = `<div dir="rtl">
+      <div style="display:flex;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap;">
+        <div class="stat-card gold" style="flex:1;min-width:150px;">
+          <div class="stat-icon">👥</div><div class="stat-value">${total}</div>
+          <div class="stat-label" style="font-family:var(--font-fa);">مجموع${filterLabel}</div>
+        </div>
+        <div class="stat-card teal" style="flex:1;min-width:150px;">
+          <div class="stat-icon">✅</div><div class="stat-value">${activeList.length}</div>
+          <div class="stat-label" style="font-family:var(--font-fa);">پرونده فعال</div>
+          <div class="stat-sub">${total?Math.round(activeList.length/total*100):0}%</div>
+        </div>
+        <div class="stat-card red" style="flex:1;min-width:150px;">
+          <div class="stat-icon">🔴</div><div class="stat-value">${inactiveList.length}</div>
+          <div class="stat-label" style="font-family:var(--font-fa);">پرونده غیرفعال</div>
+          <div class="stat-sub">${total?Math.round(inactiveList.length/total*100):0}%</div>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-bottom:1.25rem;">
+        <div class="table-toolbar">
+          <span style="font-family:var(--font-fa);font-weight:700;color:var(--teal);">✅ پرونده‌های فعال (${activeList.length} نفر)</span>
+          <button class="btn btn-sm btn-secondary" onclick="printReportOutput()">🖨️ چاپ</button>
+        </div>
+        ${makeActiveTable(activeList,'فعال','var(--teal)')}
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <span style="font-family:var(--font-fa);font-weight:700;color:var(--red);">🔴 پرونده‌های غیرفعال / محروم (${inactiveList.length} نفر)</span>
+        </div>
+        ${makeActiveTable(inactiveList,'غیرفعال','var(--red)')}
+      </div>
+    </div>`;
   }
 }
 
@@ -3534,7 +3708,7 @@ function printReportOutput() {
     </div>
   </div>
   <h2>📋 گزارش</h2>
-  <div class="sub">تاریخ چاپ: ${new Date().toLocaleDateString('fa-IR')} &nbsp;|&nbsp; مجموع پرونده‌ها: ${orphans.length}</div>
+  <div class="sub">تاریخ چاپ: ${new Date().toLocaleDateString('fa-IR')} &nbsp;|&nbsp; مجموع پرونده‌ها: ${getReportOrphans().length}${(()=>{const f=document.getElementById('rpt-filter-active')?.value;return f?(' ('+{active:'فعال',inactive:'غیرفعال'}[f]+')'):''})()}</div>
   ${out.innerHTML}
   </body></html>`);
   w.document.close();
@@ -3643,41 +3817,82 @@ function autoCalcAge() {
   const byEl = document.getElementById('f-birthyear');
   const ageEl = document.getElementById('f-age');
   if (!byEl || !ageEl) return;
-  const by = parseInt(toEnglishDigits(byEl.value));
-  if (!by || by < 1350 || by > 1430) { ageEl.value = ''; return; }
+  const by = parseInt(byEl.value);
+  if (!by || by < 1330 || by > 1430) { ageEl.value = ''; return; }
   // Current Shamsi year (approx)
   const now = new Date();
   const shamsiYear = Math.floor((now.getFullYear() - 621.5));
-  const age = shamsiYear - by;
+  // Account for birth month if set
+  const bm = parseInt(document.getElementById('f-birthmonth')?.value||'0')||0;
+  const nowMonth = now.getMonth() + 1; // 1-12 gregorian
+  // Rough Shamsi month of current date (approx)
+  const shamsiMonth = ((nowMonth + 8) % 12) + 1;
+  let age = shamsiYear - by;
+  if (bm > 0 && bm > shamsiMonth) age--;
   ageEl.value = age > 0 ? age : '';
+}
+
+function _populateBirthYearSelect() {
+  const sel = document.getElementById('f-birthyear');
+  if (!sel || sel.options.length > 2) return; // already populated
+  const now = new Date();
+  const thisYear = Math.floor(now.getFullYear() - 621.5);
+  for (let y = thisYear; y >= 1340; y--) {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    sel.appendChild(opt);
+  }
+}
+
+function _populateBirthDaySelect() {
+  const sel = document.getElementById('f-birthday');
+  if (!sel || sel.options.length > 2) return;
+  for (let d = 1; d <= 31; d++) {
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    sel.appendChild(opt);
+  }
 }
 
 // ── FAMILIES SECTION ─────────────────────────────────
 function renderFamilies() {
   const q = (document.getElementById('fam-search')?.value || '').trim().toLowerCase();
-  // Group orphans by father name (same family = same father name)
+  // Group orphans by name (اسم) + father (ولد) + grandfather (جد) — full ولدیت
   const groups = {};
   orphans.forEach(o => {
-    const key = (o.father || '').trim() || '__unknown__';
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(o);
+    const father = (o.father || '').trim();
+    const grandfather = (o.grandfather || '').trim();
+    // Family key = father___grandfather (both must match)
+    const key = father ? (father + '|||' + grandfather) : '__unknown__';
+    if (!groups[key]) groups[key] = { father, grandfather, members: [] };
+    groups[key].members.push(o);
   });
   // Convert to array and sort by size desc
-  let families = Object.entries(groups).map(([father, members]) => ({
-    father,
-    members: members.sort((a,b)=>(b.age||0)-(a.age||0)),
-    mother: members[0]?.mother || '',
-    guardian: members[0]?.guardian || '',
-    eldest: members.reduce((a,b)=>((b.age||0)>(a.age||0)?b:a), members[0]),
-  })).filter(f => f.father !== '__unknown__' || f.members.length > 1);
+  let families = Object.values(groups).map(g => ({
+    father: g.father,
+    grandfather: g.grandfather,
+    members: g.members.sort((a,b)=>(b.age||0)-(a.age||0)),
+    mother: g.members[0]?.mother || '',
+    guardian: g.members[0]?.guardian || '',
+    eldest: g.members.reduce((a,b)=>((b.age||0)>(a.age||0)?b:a), g.members[0]),
+  })).filter(f => f.father || f.members.length > 1);
 
-  // Filter
+  // Sort: multi-member families first, then alphabetically by father name
+  families.sort((a,b) => {
+    if (b.members.length !== a.members.length) return b.members.length - a.members.length;
+    return (a.father||'').localeCompare(b.father||'');
+  });
+
+  // Filter by search: name, ولد, جد, مادر, سرپرست
   if (q) {
     families = families.filter(f =>
+      f.father.toLowerCase().includes(q) ||
+      f.grandfather.toLowerCase().includes(q) ||
       f.mother.toLowerCase().includes(q) ||
       f.guardian.toLowerCase().includes(q) ||
       (f.eldest?.name || '').toLowerCase().includes(q) ||
-      f.father.toLowerCase().includes(q)
+      f.members.some(m => (m.name||'').toLowerCase().includes(q))
     );
   }
 
@@ -3705,25 +3920,35 @@ function renderFamilies() {
     const memberRows = f.members.map((m,i) => `
       <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:3px;">
         <span style="width:22px;height:22px;border-radius:50%;background:rgba(201,168,76,0.15);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--gold);font-weight:700;">${i+1}</span>
-        <span style="flex:1;font-weight:${i===0?'600':'400'};color:var(--text);">${m.name||'—'}</span>
+        <span style="flex:1;font-weight:${i===0?'600':'400'};color:var(--text);font-family:var(--font-fa);">${m.name||'—'}</span>
+        <span style="font-size:.72rem;color:var(--text2);font-family:var(--font-fa);">ولد: ${m.father||'—'}</span>
+        ${m.grandfather?`<span style="font-size:.72rem;color:var(--text3);font-family:var(--font-fa);">جد: ${m.grandfather}</span>`:''}
         <span style="font-size:.75rem;color:var(--text3);">سن: ${m.age||'—'}</span>
         <span style="font-size:.72rem;color:${statusColors[m.status]||'var(--text3)'};">${m.status==='Healthy'?'سالم':m.status==='Disabled'?'معیوب':'مریض مزمن'}</span>
-        <span style="font-size:.72rem;color:${m.isActive===false?'var(--red)':'var(--teal)'};">${m.isActive===false?'غیرفعال':'فعال'}</span>
+        <span style="font-size:.72rem;color:${m.isActive===false?'var(--red)':'var(--teal)'};">${m.isActive===false?'🔴 غیرفعال':'✅ فعال'}</span>
         <button onclick="openEditModal('${m.id}')" style="background:rgba(91,140,245,0.15);border:1px solid rgba(91,140,245,0.3);color:var(--blue);border-radius:5px;padding:2px 8px;font-size:.68rem;cursor:pointer;">✏️ ویرایش</button>
       </div>`).join('');
+    // Build ولدیت label
+    const waldiyat = f.father + (f.grandfather ? ' ولد ' + f.grandfather : '');
+    const activeCount = f.members.filter(m=>m.isActive!==false).length;
     return `
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
       <div style="display:flex;align-items:center;gap:1rem;padding:.85rem 1.1rem;background:rgba(201,168,76,0.06);border-bottom:1px solid var(--border);">
         <span style="font-size:1.5rem;">👨‍👩‍👧</span>
         <div style="flex:1;">
-          <div style="font-weight:700;font-size:.95rem;color:var(--text);">خانواده ${f.father}</div>
-          <div style="font-size:.76rem;color:var(--text3);margin-top:2px;">
-            ${f.mother?`مادر: <strong style="color:var(--text2)">${f.mother}</strong> &nbsp;·&nbsp;`:''}
-            ${f.guardian?`سرپرست: <strong style="color:var(--text2)">${f.guardian}</strong> &nbsp;·&nbsp;`:''}
-            طفل کلان: <strong style="color:var(--text2)">${f.eldest?.name||'—'}</strong>
+          <div style="font-weight:700;font-size:.95rem;color:var(--text);font-family:var(--font-fa);">خانواده ${waldiyat}</div>
+          <div style="font-size:.76rem;color:var(--text3);margin-top:2px;font-family:var(--font-fa);">
+            ${f.father?`<span>ولد: <strong style="color:var(--gold)">${f.father}</strong></span>`:''}
+            ${f.grandfather?`<span> &nbsp;·&nbsp; جد: <strong style="color:var(--text2)">${f.grandfather}</strong></span>`:''}
+            ${f.mother?`<span> &nbsp;·&nbsp; مادر: <strong style="color:var(--text2)">${f.mother}</strong></span>`:''}
+            ${f.guardian?`<span> &nbsp;·&nbsp; سرپرست: <strong style="color:var(--text2)">${f.guardian}</strong></span>`:''}
+            <span> &nbsp;·&nbsp; طفل کلان: <strong style="color:var(--text2)">${f.eldest?.name||'—'}</strong></span>
           </div>
         </div>
-        <span style="background:rgba(201,168,76,0.2);color:var(--gold);border-radius:20px;padding:3px 12px;font-size:.8rem;font-weight:700;">${f.members.length} نفر</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+          <span style="background:rgba(201,168,76,0.2);color:var(--gold);border-radius:20px;padding:3px 12px;font-size:.8rem;font-weight:700;">${f.members.length} نفر</span>
+          ${activeCount < f.members.length ? `<span style="background:rgba(62,207,207,0.15);color:var(--teal);border-radius:20px;padding:2px 9px;font-size:.72rem;">${activeCount} فعال</span>` : ''}
+        </div>
       </div>
       <div style="padding:.75rem 1rem;">${memberRows}</div>
     </div>`;
