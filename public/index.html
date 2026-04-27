@@ -32,9 +32,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 body.rtl{font-family:var(--font-fa);direction:rtl;}
 
 /* Scrollbar */
-::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar{width:12px;height:12px;}
 ::-webkit-scrollbar-track{background:var(--surface);}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+::-webkit-scrollbar-thumb{background:#c9a84c;border-radius:6px;border:2px solid var(--surface);}
 /* SCORES */
 .sc-subject-item{display:flex;flex-direction:column;gap:2px;}
 .sc-subject-item label{font-size:.72rem;color:var(--text2);font-family:var(--font-fa);}
@@ -314,7 +314,7 @@ body.rtl .toast{right:auto;left:2rem;}
 @media(max-width:768px){.hamburger{display:block;}}
 </style>
 </head>
-<body onload="setLang('fa', true)">
+<body onload="setLang('fa',true)">
 
 <!-- LOGIN PAGE -->
 <div id="loginPage">
@@ -366,9 +366,9 @@ body.rtl .toast{right:auto;left:2rem;}
   <div style="padding:1rem;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:10px;font-size:.77rem;color:var(--text3);line-height:1.8;">
     <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;"><span style="font-size:1rem;">🔑</span><strong style="color:var(--text2);">حساب‌های نمونه</strong></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem;">
-      <span>Admin:</span><span><code style="color:var(--gold);">admin / admin123</code></span>
-      <span>Editor:</span><span><code style="color:var(--gold);">editor / edit123</code></span>
-      <span>Viewer:</span><span><code style="color:var(--gold);">viewer / view123</code></span>
+      <span>مدیر:</span><span><code style="color:var(--gold);">admin / admin123</code></span>
+      <span>ویرایشگر:</span><span><code style="color:var(--gold);">editor / edit123</code></span>
+      <span>بیننده:</span><span><code style="color:var(--gold);">viewer / view123</code></span>
     </div>
   </div>
 
@@ -1326,7 +1326,7 @@ body.rtl .toast{right:auto;left:2rem;}
         <div class="fg"><!-- spacer --></div>
 
         <div class="fg">
-          <label class="fl" style="color:var(--blue);">🔤 اسم (انگلیسی) <button type="button" onclick="autoFillEnglishNames()" style="background:rgba(91,140,245,0.15);border:1px solid rgba(91,140,245,0.4);color:var(--blue);border-radius:5px;padding:1px 7px;font-size:.65rem;cursor:pointer;font-family:var(--font-fa);margin-right:4px;">خودکار</button></label>
+          <label class="fl" style="color:var(--blue);">🔤 اسم (انگلیسی) <button type="button" onclick="autoFillEnglishNames()" style="background:rgba(91,140,245,0.15);border:1px solid rgba(91,140,245,0.4);color:var(--blue);border-radius:5px;padding:1px 7px;font-size:.65rem;cursor:pointer;font-family:var(--font-fa);margin-right:4px;">🔤 خودکار</button></label>
           <input class="fi" type="text" id="f-name-en" placeholder="Full name in English" style="direction:ltr;font-family:'DM Sans',sans-serif;border-color:rgba(91,140,245,0.35);">
         </div>
         <div class="fg">
@@ -2217,9 +2217,9 @@ function setLang(lang, loginOnly=false) {
   if(llEn) { llEn.style.background = lang==='en'?'var(--gold)':'none'; llEn.style.color=lang==='en'?'#1a1200':'var(--text2)';}
   if(llFa) { llFa.style.background = lang==='fa'?'var(--gold)':'none'; llFa.style.color=lang==='fa'?'#1a1200':'var(--text2)';}
   if (loginOnly) return;
-  // App
-  document.getElementById('lang-en').classList.toggle('active', lang==='en');
-  document.getElementById('lang-fa').classList.toggle('active', lang==='fa');
+  // App — optional chaining guards removed UI elements
+  document.getElementById('lang-en')?.classList.toggle('active', lang==='en');
+  document.getElementById('lang-fa')?.classList.toggle('active', lang==='fa');
   applyTranslations();
   renderCurrentSection();
 }
@@ -2441,9 +2441,7 @@ function canAdmin() { return currentUser && currentUser.role === 'admin'; }
 // APP INIT
 // ======================================================
 async function bootApp() {
-  // Force FA UI — English interface removed
   setLang('fa');
-  // Show loading
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('sidebarName').textContent = currentUser.fullName;
@@ -2683,16 +2681,15 @@ function openEditModal(id) {
   document.getElementById('f-age').value = o.age||'';
   _populateBirthYearSelect();
   _populateBirthDaySelect();
-  const dobEl2 = document.getElementById('f-dob');
-  if (dobEl2) dobEl2.value = o.dob||'';
+  const dobLoadEl = document.getElementById('f-dob');
+  if (dobLoadEl) dobLoadEl.value = o.dob||'';
   const tzEl = document.getElementById('f-tazkira');
   if (tzEl) tzEl.value = o.tazkira||'';
   document.getElementById('f-father').value = o.father||'';
   document.getElementById('f-father-en').value = o.fatherEn||'';
   document.getElementById('f-grandfather').value = o.grandfather||'';
   document.getElementById('f-mother').value = o.mother||'';
-  const mfEl = document.getElementById('f-mother-father');
-  if (mfEl) mfEl.value = o.motherFather||'';
+  const mfEl=document.getElementById('f-mother-father'); if(mfEl) mfEl.value=o.motherFather||'';
   document.getElementById('f-status').value = o.status||'Healthy';
   document.getElementById('f-active').value = (o.isActive===false) ? 'inactive' : 'active';
   document.getElementById('f-family').value = o.family||'';
@@ -4011,7 +4008,7 @@ function transliterateDari(text) {
 }
 
 // ── BIRTH YEAR → AUTO AGE ────────────────────────────
-function autoCalcAge() {} // legacy stub — replaced by autoCalcAgeFromDOB
+function autoCalcAge() {} // legacy stub
 
 function autoCalcAgeFromDOB() {
   const dobEl = document.getElementById('f-dob');
@@ -4021,12 +4018,12 @@ function autoCalcAgeFromDOB() {
   if (isNaN(dob)) { ageEl.value=''; return; }
   const now = new Date();
   let age = now.getFullYear() - dob.getFullYear();
-  const m = now.getMonth() - dob.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+  if (now.getMonth() < dob.getMonth() || (now.getMonth()===dob.getMonth() && now.getDate()<dob.getDate())) age--;
   ageEl.value = age >= 0 ? age : '';
 }
 
-function _populateBirthYearSelect() { /* replaced by miladi DOB */ }
+function _populateBirthYearSelect() { /* replaced */ }
+
 function _populateBirthDaySelect() {
   const sel = document.getElementById('f-birthday');
   if (!sel || sel.options.length > 2) return;
