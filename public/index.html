@@ -32,9 +32,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 body.rtl{font-family:var(--font-fa);direction:rtl;}
 
 /* Scrollbar */
-::-webkit-scrollbar{width:12px;height:12px;}
+::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:var(--surface);}
-::-webkit-scrollbar-thumb{background:#c9a84c;border-radius:6px;border:2px solid var(--surface);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 /* SCORES */
 .sc-subject-item{display:flex;flex-direction:column;gap:2px;}
 .sc-subject-item label{font-size:.72rem;color:var(--text2);font-family:var(--font-fa);}
@@ -314,7 +314,7 @@ body.rtl .toast{right:auto;left:2rem;}
 @media(max-width:768px){.hamburger{display:block;}}
 </style>
 </head>
-<body>
+<body onload="setLang('fa', true)">
 
 <!-- LOGIN PAGE -->
 <div id="loginPage">
@@ -358,13 +358,10 @@ body.rtl .toast{right:auto;left:2rem;}
     <input type="password" id="loginPass" placeholder="Enter your password" autocomplete="current-password">
   </div>
   <div style="margin-bottom:1.5rem;">
-    <button class="btn btn-primary" onclick="doLogin()" id="lt-btn" style="padding:.9rem;font-size:1rem;letter-spacing:.5px;border-radius:10px;">🔐 Sign In</button>
+    <button class="btn btn-primary" onclick="doLogin()" id="lt-btn" style="padding:.9rem;font-size:1rem;letter-spacing:.5px;border-radius:10px;">🔐 ورود</button>
   </div>
 
-  <div style="display:flex;justify-content:center;gap:.6rem;margin-bottom:1.25rem;">
-    <button id="ll-en" onclick="setLang('en',true)" style="background:var(--surface2);border:1px solid var(--border);padding:.45rem 1.1rem;border-radius:8px;color:var(--text2);cursor:pointer;font-size:.83rem;transition:all .2s;font-family:inherit;">🇺🇸 English</button>
-    <button id="ll-fa" onclick="setLang('fa',true)" style="background:var(--surface2);border:1px solid var(--border);padding:.45rem 1.1rem;border-radius:8px;color:var(--text2);cursor:pointer;font-size:.83rem;transition:all .2s;font-family:'Vazirmatn',sans-serif;">🇮🇷 فارسی</button>
-  </div>
+  
 
   <div style="padding:1rem;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:10px;font-size:.77rem;color:var(--text3);line-height:1.8;">
     <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;"><span style="font-size:1rem;">🔑</span><strong style="color:var(--text2);">حساب‌های نمونه</strong></div>
@@ -446,11 +443,8 @@ body.rtl .toast{right:auto;left:2rem;}
 <!-- Topbar -->
 <div class="topbar">
   <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-  <div class="topbar-title" id="topbarTitle">Dashboard</div>
-  <div class="lang-toggle">
-    <button class="lang-btn active" id="lang-en" onclick="setLang('en')">EN</button>
-    <button class="lang-btn" id="lang-fa" onclick="setLang('fa')">FA</button>
-  </div>
+  <div class="topbar-title" id="topbarTitle">داشبورد</div>
+
 </div>
 
 <!-- Main -->
@@ -1332,11 +1326,11 @@ body.rtl .toast{right:auto;left:2rem;}
         <div class="fg"><!-- spacer --></div>
 
         <div class="fg">
-          <label class="fl" style="direction:ltr;text-align:left;color:var(--blue);">Name (English) <button type="button" onclick="autoFillEnglishNames()" style="background:rgba(91,140,245,0.15);border:1px solid rgba(91,140,245,0.4);color:var(--blue);border-radius:5px;padding:1px 7px;font-size:.65rem;cursor:pointer;font-family:var(--font-fa);margin-right:4px;">🔤 خودکار</button></label>
+          <label class="fl" style="color:var(--blue);">🔤 اسم (انگلیسی) <button type="button" onclick="autoFillEnglishNames()" style="background:rgba(91,140,245,0.15);border:1px solid rgba(91,140,245,0.4);color:var(--blue);border-radius:5px;padding:1px 7px;font-size:.65rem;cursor:pointer;font-family:var(--font-fa);margin-right:4px;">خودکار</button></label>
           <input class="fi" type="text" id="f-name-en" placeholder="Full name in English" style="direction:ltr;font-family:'DM Sans',sans-serif;border-color:rgba(91,140,245,0.35);">
         </div>
         <div class="fg">
-          <label class="fl" style="direction:ltr;text-align:left;color:var(--blue);">Father's Name (English)</label>
+          <label class="fl" style="color:var(--blue);">🔤 نام پدر (انگلیسی)</label>
           <input class="fi" type="text" id="f-father-en" placeholder="Father's name in English" style="direction:ltr;font-family:'DM Sans',sans-serif;border-color:rgba(91,140,245,0.35);">
         </div>
         <div class="fg"><!-- spacer --></div>
@@ -1350,23 +1344,14 @@ body.rtl .toast{right:auto;left:2rem;}
           <label class="fl">نام مادر</label>
           <input class="fi" type="text" id="f-mother" placeholder="نام مادر" lang="fa">
         </div>
+        <div class="fg">
+          <label class="fl">پدر مادر</label>
+          <input class="fi" type="text" id="f-mother-father" placeholder="نام پدر مادر" lang="fa">
+        </div>
         <div class="fg" style="grid-column:span 1;">
-          <label class="fl">📅 تاریخ تولد (شمسی)</label>
-          <div style="display:flex;gap:3px;align-items:center;">
-            <select class="fi" id="f-birthyear" onchange="autoCalcAge()" style="flex:2;padding:.38rem .3rem;font-size:.76rem;">
-              <option value="">سال</option>
-            </select>
-            <select class="fi" id="f-birthmonth" onchange="autoCalcAge()" style="flex:2;padding:.38rem .3rem;font-size:.76rem;">
-              <option value="">ماه</option>
-              <option value="1">حمل</option><option value="2">ثور</option><option value="3">جوزا</option>
-              <option value="4">سرطان</option><option value="5">اسد</option><option value="6">سنبله</option>
-              <option value="7">میزان</option><option value="8">عقرب</option><option value="9">قوس</option>
-              <option value="10">جدی</option><option value="11">دلو</option><option value="12">حوت</option>
-            </select>
-            <select class="fi" id="f-birthday" onchange="autoCalcAge()" style="flex:1.5;padding:.38rem .3rem;font-size:.76rem;">
-              <option value="">روز</option>
-            </select>
-          </div>
+          <label class="fl">📅 تاریخ تولد (میلادی)</label>
+          <input class="fi" type="date" id="f-dob" onchange="autoCalcAgeFromDOB()"
+            style="font-family:'DM Sans',sans-serif;direction:ltr;font-size:.88rem;">
         </div>
         <div class="fg">
           <label class="fl">سن <span style="color:var(--text3);font-size:.68rem;">(خودکار)</span></label>
@@ -2066,7 +2051,7 @@ function makeThumbnail(dataUrl, size=60) {
   });
 }
 
-let currentLang = 'en';
+let currentLang = 'fa';
 let schools = [];
 let sponsors = [];
 let currentSponsorPhoto = null;
@@ -2456,6 +2441,8 @@ function canAdmin() { return currentUser && currentUser.role === 'admin'; }
 // APP INIT
 // ======================================================
 async function bootApp() {
+  // Force FA UI — English interface removed
+  setLang('fa');
   // Show loading
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('app').style.display = 'block';
@@ -2696,18 +2683,16 @@ function openEditModal(id) {
   document.getElementById('f-age').value = o.age||'';
   _populateBirthYearSelect();
   _populateBirthDaySelect();
-  const byEl = document.getElementById('f-birthyear');
-  if (byEl) byEl.value = o.birthyear||'';
-  const bmEl = document.getElementById('f-birthmonth');
-  if (bmEl) bmEl.value = o.birthmonth||'';
-  const bdEl = document.getElementById('f-birthday');
-  if (bdEl) bdEl.value = o.birthday||'';
+  const dobEl2 = document.getElementById('f-dob');
+  if (dobEl2) dobEl2.value = o.dob||'';
   const tzEl = document.getElementById('f-tazkira');
   if (tzEl) tzEl.value = o.tazkira||'';
   document.getElementById('f-father').value = o.father||'';
   document.getElementById('f-father-en').value = o.fatherEn||'';
   document.getElementById('f-grandfather').value = o.grandfather||'';
   document.getElementById('f-mother').value = o.mother||'';
+  const mfEl = document.getElementById('f-mother-father');
+  if (mfEl) mfEl.value = o.motherFather||'';
   document.getElementById('f-status').value = o.status||'Healthy';
   document.getElementById('f-active').value = (o.isActive===false) ? 'inactive' : 'active';
   document.getElementById('f-family').value = o.family||'';
@@ -2747,7 +2732,7 @@ function openEditModal(id) {
 }
 
 function clearForm() {
-  ['f-name','f-age','f-father','f-grandfather','f-mother','f-family','f-guardian','f-guardian-father','f-mobile','f-address','f-notes','f-name-en','f-father-en','f-school-custom','f-birthyear','f-birthmonth','f-birthday','f-tazkira'].forEach(id => {
+  ['f-name','f-age','f-father','f-grandfather','f-mother','f-mother-father','f-family','f-guardian','f-guardian-father','f-mobile','f-address','f-notes','f-name-en','f-father-en','f-school-custom','f-birthyear','f-birthmonth','f-birthday','f-tazkira'].forEach(id => {
     const el = document.getElementById(id);
     if(el){ el.value=''; el.classList.remove('error'); }
   });
@@ -2794,11 +2779,7 @@ function handleMobileInput(el) {
 async function saveOrphan() {
   // Disable save button to prevent duplicate submissions
   const saveBtn = document.getElementById('ml-save');
-  if (saveBtn) {
-    saveBtn.disabled = true;
-    saveBtn.textContent = '⏳ در حال ذخیره...';
-    saveBtn.style.opacity = '0.65';
-  }
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.7'; }
 
   // Clear previous validation
   const validEl = document.getElementById('formValidationMsg');
@@ -2853,6 +2834,7 @@ async function saveOrphan() {
     fatherEn: document.getElementById('f-father-en').value.trim(),
     grandfather: document.getElementById('f-grandfather').value.trim(),
     mother: document.getElementById('f-mother').value.trim(),
+    motherFather: document.getElementById('f-mother-father')?.value.trim()||'',
     status: document.getElementById('f-status').value,
     isActive: document.getElementById('f-active').value !== 'inactive',
     family: parseInt(toEnglishDigits(document.getElementById('f-family').value)) || 0,
@@ -2860,9 +2842,7 @@ async function saveOrphan() {
     guardianFather: document.getElementById('f-guardian-father').value.trim(),
     grade: goesSchool ? document.getElementById('f-grade').value : 'none',
     mobile: mobileDigits,
-    birthyear: parseInt(document.getElementById('f-birthyear')?.value||'')||null,
-    birthmonth: parseInt(document.getElementById('f-birthmonth')?.value||'')||null,
-    birthday: parseInt(document.getElementById('f-birthday')?.value||'')||null,
+    dob: document.getElementById('f-dob')?.value||'',
     tazkira: document.getElementById('f-tazkira')?.value.trim()||'',
     goesSchool: goesSchool,
     schoolType: goesSchool ? schoolType : '',
@@ -2894,7 +2874,7 @@ async function saveOrphan() {
       });
     }
     await saveOrphans();
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 ذخیره پرونده'; saveBtn.style.opacity = '1'; }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = '1'; }
     closeModal('orphanModal');
     filterOrphans();
     renderDashboard();
@@ -3730,12 +3710,12 @@ function runReport(type) {
         const stl= o.status==='Healthy'?'صحتمند':o.status==='Disabled'?'معلول':'بیماری مزمن';
         const gr = o.grade?(o.grade==='university'?'پوهنتون':o.grade==='course'?'کورس':o.grade==='none'?'—':`صنف ${o.grade}`):'—';
         const typ= (o.studenttype||'orphan')==='needy'?'🤝 بی‌بضاعت':'🕊️ یتیم';
+        const wald= [o.father,o.grandfather].filter(Boolean).join(' ولد ');
         return `<tr>
           <td style="text-align:center;color:var(--text3);font-size:.75rem;">${i+1}</td>
           <td class="td-id">${o.id}</td>
           <td class="td-name" style="font-family:var(--font-fa);">${o.name||'—'}</td>
-          <td style="font-family:var(--font-fa);font-size:.8rem;">${o.father||'—'}</td>
-          <td style="font-family:var(--font-fa);font-size:.8rem;color:var(--text2);">${o.grandfather||'—'}</td>
+          <td style="font-family:var(--font-fa);font-size:.8rem;">${wald||'—'}</td>
           <td style="text-align:center;">${o.age||'—'}</td>
           <td style="font-family:var(--font-fa);font-size:.78rem;">${typ}</td>
           <td><span class="badge ${sb}" style="font-family:var(--font-fa);font-size:.7rem;">${stl}</span></td>
@@ -3746,7 +3726,7 @@ function runReport(type) {
       }).join('');
       return `<div style="overflow-x:auto;"><table>
         <thead><tr style="font-family:var(--font-fa);">
-          <th>#</th><th>شناسه</th><th>نام</th><th>پدر</th><th>جد</th><th>سن</th><th>نوع</th><th>وضعیت</th><th>صنف</th><th>موبایل</th><th>پرونده</th>
+          <th>#</th><th>شناسه</th><th>نام</th><th>ولدیت</th><th>سن</th><th>نوع</th><th>وضعیت</th><th>صنف</th><th>موبایل</th><th>پرونده</th>
         </tr></thead><tbody>${rows}</tbody></table></div>`;
     }
 
@@ -4031,38 +4011,22 @@ function transliterateDari(text) {
 }
 
 // ── BIRTH YEAR → AUTO AGE ────────────────────────────
-function autoCalcAge() {
-  const byEl = document.getElementById('f-birthyear');
+function autoCalcAge() {} // legacy stub — replaced by autoCalcAgeFromDOB
+
+function autoCalcAgeFromDOB() {
+  const dobEl = document.getElementById('f-dob');
   const ageEl = document.getElementById('f-age');
-  if (!byEl || !ageEl) return;
-  const by = parseInt(byEl.value);
-  if (!by || by < 1330 || by > 1430) { ageEl.value = ''; return; }
-  // Current Shamsi year (approx)
+  if (!dobEl || !ageEl || !dobEl.value) { if(ageEl) ageEl.value=''; return; }
+  const dob = new Date(dobEl.value);
+  if (isNaN(dob)) { ageEl.value=''; return; }
   const now = new Date();
-  const shamsiYear = Math.floor((now.getFullYear() - 621.5));
-  // Account for birth month if set
-  const bm = parseInt(document.getElementById('f-birthmonth')?.value||'0')||0;
-  const nowMonth = now.getMonth() + 1; // 1-12 gregorian
-  // Rough Shamsi month of current date (approx)
-  const shamsiMonth = ((nowMonth + 8) % 12) + 1;
-  let age = shamsiYear - by;
-  if (bm > 0 && bm > shamsiMonth) age--;
-  ageEl.value = age > 0 ? age : '';
+  let age = now.getFullYear() - dob.getFullYear();
+  const m = now.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+  ageEl.value = age >= 0 ? age : '';
 }
 
-function _populateBirthYearSelect() {
-  const sel = document.getElementById('f-birthyear');
-  if (!sel || sel.options.length > 2) return; // already populated
-  const now = new Date();
-  const thisYear = Math.floor(now.getFullYear() - 621.5);
-  for (let y = thisYear; y >= 1340; y--) {
-    const opt = document.createElement('option');
-    opt.value = y;
-    opt.textContent = y;
-    sel.appendChild(opt);
-  }
-}
-
+function _populateBirthYearSelect() { /* replaced by miladi DOB */ }
 function _populateBirthDaySelect() {
   const sel = document.getElementById('f-birthday');
   if (!sel || sel.options.length > 2) return;
