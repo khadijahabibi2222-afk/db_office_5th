@@ -31,10 +31,17 @@ html{font-size:15px;}
 body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden;}
 body.rtl{font-family:var(--font-fa);direction:rtl;}
 
-/* Scrollbar */
-::-webkit-scrollbar{width:12px;height:12px;}
-::-webkit-scrollbar-track{background:var(--surface);}
-::-webkit-scrollbar-thumb{background:#c9a84c;border-radius:6px;border:2px solid var(--surface);}
+/* Scrollbar — gold, 2× thick for easy use */
+::-webkit-scrollbar{width:14px;height:14px;}
+::-webkit-scrollbar-track{background:var(--surface);border-radius:8px;}
+::-webkit-scrollbar-thumb{background:#c9a84c;border-radius:8px;border:2px solid var(--bg);}
+::-webkit-scrollbar-thumb:hover{background:#e8c55a;}
+::-webkit-scrollbar-corner{background:var(--surface);}
+/* table-wrap inner scroll — also thick gold */
+.table-wrap{scrollbar-width:thick;scrollbar-color:#c9a84c var(--surface);}
+.table-wrap::-webkit-scrollbar{width:14px;height:14px;}
+.table-wrap::-webkit-scrollbar-thumb{background:#c9a84c;border-radius:8px;border:2px solid var(--bg);}
+.table-wrap::-webkit-scrollbar-thumb:hover{background:#e8c55a;}
 /* SCORES */
 .sc-subject-item{display:flex;flex-direction:column;gap:2px;}
 .sc-subject-item label{font-size:.72rem;color:var(--text2);font-family:var(--font-fa);}
@@ -1931,8 +1938,11 @@ const API = (() => {
     me:     ()      => request('GET',  '/auth/me'),
 
     // Collections
-    getOrphans:  ()    => request('GET', '/orphans'),
-    saveOrphans: (arr) => request('PUT', '/orphans', arr),
+    getOrphans:    ()        => request('GET',    '/orphans'),
+    saveOrphans:   (arr)     => request('PUT',    '/orphans', arr),     // fallback bulk
+    upsertOrphan:  (id, doc) => request('PUT',    '/orphans/' + id, doc),
+    createOrphan:  (doc)     => request('POST',   '/orphans', doc),
+    deleteOrphan:  (id)      => request('DELETE', '/orphans/' + id),
 
     getSchools:  ()    => request('GET', '/schools'),
     saveSchools: (arr) => request('PUT', '/schools', arr),
@@ -2774,33 +2784,23 @@ function handleMobileInput(el) {
 }
 
 async function saveOrphan() {
-  // Disable save button to prevent duplicate submissions
   const saveBtn = document.getElementById('ml-save');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.7'; }
-
-  // Clear previous validation
   const validEl = document.getElementById('formValidationMsg');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.7'; saveBtn.textContent = '⏳ ذخیره...'; }
   validEl.style.display = 'none';
-  const errors = [];
 
-  const nameVal = document.getElementById('f-name').value.trim();
-  const ageRaw = toEnglishDigits(document.getElementById('f-age').value.trim());
-  const mobileRaw = toEnglishDigits(document.getElementById('f-mobile').value.trim());
+  // ── Validation ──────────────────────────────────────
+  const errors = [];
+  const nameVal    = document.getElementById('f-name').value.trim();
+  const ageRaw     = toEnglishDigits(document.getElementById('f-age').value.trim());
+  const mobileRaw  = toEnglishDigits(document.getElementById('f-mobile').value.trim());
   const mobileDigits = mobileRaw.replace(/\D/g,'');
 
-  if (!nameVal) {
-    errors.push('نام کامل الزامی است');
-    document.getElementById('f-name').classList.add('error');
-  } else {
-    document.getElementById('f-name').classList.remove('error');
-  }
+  if (!nameVal) { errors.push('نام کامل الزامی است'); document.getElementById('f-name').classList.add('error'); }
+  else { document.getElementById('f-name').classList.remove('error'); }
 
-  if (!ageRaw || isNaN(parseInt(ageRaw))) {
-    errors.push('سن الزامی است');
-    document.getElementById('f-age').classList.add('error');
-  } else {
-    document.getElementById('f-age').classList.remove('error');
-  }
+  if (!ageRaw || isNaN(parseInt(ageRaw))) { errors.push('سن الزامی است'); document.getElementById('f-age').classList.add('error'); }
+  else { document.getElementById('f-age').classList.remove('error'); }
 
   if (mobileRaw && mobileDigits.length !== 10) {
     errors.push('شماره موبایل باید دقیقاً ۱۰ رقم باشد');
@@ -2814,16 +2814,46 @@ async function saveOrphan() {
   if (errors.length > 0) {
     validEl.innerHTML = '⚠️ ' + errors.join(' &nbsp;|&nbsp; ');
     validEl.style.display = 'block';
-    // Re-enable button on validation failure
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 ذخیره پرونده'; saveBtn.style.opacity = '1'; }
     return;
   }
 
-  const id = document.getElementById('editId').value;
+  // ── Build record ─────────────────────────────────────
+  const editId     = document.getElementById('editId').value;
+  const isNew      = !editId;
+  const recordId   = editId || generateId();
   const goesSchool = document.getElementById('f-goes-school').value !== 'no';
   const schoolType = document.getElementById('f-school-type').value;
-  const schoolCustom = document.getElementById('f-school-custom').value.trim();
+
+  // PHOTO: store full image in IndexedDB, only keep thumb in the record
+  // This keeps server payload tiny (thumb ~5KB vs full ~200KB)
+  let photoMeta = null;
+  if (currentPhoto) {
+    if (typeof currentPhoto === 'object' && currentPhoto.full) {
+      // Save full image to IndexedDB (fast, local)
+      await idbSet('photo_' + recordId, currentPhoto.full).catch(() => {});
+      // Only keep thumb in server record
+      photoMeta = { thumb: currentPhoto.thumb, hasFullInIDB: true };
+    } else if (typeof currentPhoto === 'string') {
+      await idbSet('photo_' + recordId, currentPhoto).catch(() => {});
+      photoMeta = { thumb: currentPhoto.length > 20000 ? currentPhoto.substring(0, 200) + '...' : currentPhoto, hasFullInIDB: true };
+    } else {
+      photoMeta = currentPhoto;
+    }
+  }
+
+  // ATTACHMENTS: store in IndexedDB, keep only metadata in record
+  let attachMeta = [];
+  if (currentAttachments && currentAttachments.length) {
+    const lightAttach = currentAttachments.map(a => ({
+      name: a.name, type: a.type, size: a.size, id: a.id || (recordId + '_' + Date.now())
+    }));
+    await idbSet('attach_' + recordId, currentAttachments).catch(() => {});
+    attachMeta = lightAttach;
+  }
+
   const data = {
+    id: recordId,
     name: nameVal,
     nameEn: document.getElementById('f-name-en').value.trim(),
     age: parseInt(ageRaw),
@@ -2841,9 +2871,9 @@ async function saveOrphan() {
     mobile: mobileDigits,
     dob: document.getElementById('f-dob')?.value||'',
     tazkira: document.getElementById('f-tazkira')?.value.trim()||'',
-    goesSchool: goesSchool,
+    goesSchool,
     schoolType: goesSchool ? schoolType : '',
-    schoolCustom: (goesSchool && schoolType === 'private') ? schoolCustom : '',
+    schoolCustom: (goesSchool && schoolType === 'private') ? document.getElementById('f-school-custom').value.trim() : '',
     school: (goesSchool && schoolType !== 'private') ? document.getElementById('f-school').value : '',
     studenttype: document.getElementById('f-studenttype')?.value || 'orphan',
     priority: document.getElementById('f-priority')?.value || '',
@@ -2852,38 +2882,55 @@ async function saveOrphan() {
     studytime: document.getElementById('f-studytime').value,
     address: document.getElementById('f-address').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
-    photo: currentPhoto,
-    attachments: currentAttachments,
+    photo: photoMeta,           // ← only thumb, NOT full base64
+    attachments: attachMeta,    // ← only metadata, NOT file data
+    updatedAt: new Date().toISOString(),
+    ...( isNew ? { createdAt: new Date().toISOString() } : {} ),
   };
 
+  // ── Update in-memory array instantly ─────────────────
+  if (isNew) {
+    orphans.push(data);
+  } else {
+    const idx = orphans.findIndex(o => o.id === recordId);
+    if (idx >= 0) orphans[idx] = { ...orphans[idx], ...data };
+    else orphans.push(data);
+  }
+
+  // ── Close UI immediately — don't wait for network ────
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 ذخیره پرونده'; saveBtn.style.opacity = '1'; }
+  closeModal('orphanModal');
+  filterOrphans();
+  renderDashboard();
+  renderSchoolsSection();
+  populateOrphanSelect();
+  showToast('✅ پرونده ذخیره شد', 'success');
+
+  // ── Save to server in background (single record only) ─
+  _pushOrphanToServer(recordId, data, isNew);
+}
+
+// Background single-record push — non-blocking
+async function _pushOrphanToServer(id, data, isNew) {
   try {
-    if (id) {
-      const idx = orphans.findIndex(o => o.id === id);
-      if (idx >= 0) {
-        orphans[idx] = { ...orphans[idx], ...data, updatedAt: new Date().toISOString() };
+    if (isNew) {
+      await API.createOrphan(data);
+    } else {
+      await API.upsertOrphan(id, data);
+    }
+  } catch (err) {
+    // Single-record endpoint not available (older backend) → fallback to bulk save
+    if (err.message && (err.message.includes('404') || err.message.includes('405') || err.message.includes('Not Found') || err.message.includes('Method'))) {
+      try {
+        await API.saveOrphans(orphans);
+      } catch (e2) {
+        showToast('⚠️ خطا در ذخیره‌سازی: ' + e2.message, 'error');
+        console.error('Bulk fallback save error:', e2);
       }
     } else {
-      orphans.push({
-        id: generateId(),
-        ...data,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
+      showToast('⚠️ خطا در ذخیره‌سازی: ' + err.message, 'error');
+      console.error('Push orphan error:', err);
     }
-    await saveOrphans();
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = '1'; }
-    closeModal('orphanModal');
-    filterOrphans();
-    renderDashboard();
-    renderSchoolsSection();
-    populateOrphanSelect();
-    showToast('✅ پرونده با موفقیت ذخیره شد', 'success');
-  } catch(err) {
-    validEl.innerHTML = '❌ خطا در ذخیره‌سازی: ' + err.message;
-    validEl.style.display = 'block';
-    // Re-enable button on error so user can try again
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 ذخیره پرونده'; saveBtn.style.opacity = '1'; }
-    console.error('Save error:', err);
   }
 }
 
@@ -3020,16 +3067,23 @@ function promptDelete(id) {
 }
 async function confirmDelete() {
   if(!deleteTarget) return;
-  // Clean up binary data from IndexedDB
-  await idbDel('photo_' + deleteTarget).catch(()=>{});
-  await idbDel('attach_' + deleteTarget).catch(()=>{});
-  orphans = orphans.filter(o => o.id !== deleteTarget);
-  await saveOrphans();
+  const id = deleteTarget;
+  deleteTarget = null;
+  // Clean up binary data from IndexedDB (fast, local)
+  idbDel('photo_'  + id).catch(()=>{});
+  idbDel('attach_' + id).catch(()=>{});
+  // Remove from memory instantly
+  orphans = orphans.filter(o => o.id !== id);
   closeModal('deleteModal');
   filterOrphans();
   renderDashboard();
   showToast(t('toast.deleted'), 'info');
-  deleteTarget = null;
+  // Background: delete from server (single record)
+  API.deleteOrphan(id).catch(err => {
+    if (err.message && (err.message.includes('404') || err.message.includes('405') || err.message.includes('Method'))) {
+      API.saveOrphans(orphans).catch(e2 => console.error('Bulk delete fallback:', e2));
+    } else { console.error('Delete error:', err); }
+  });
 }
 
 // ======================================================
